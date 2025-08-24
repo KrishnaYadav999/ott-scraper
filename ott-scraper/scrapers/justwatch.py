@@ -78,7 +78,7 @@ def scrape_justwatch(url: str) -> dict:
             imdb_rating = re.search(r"[\d.]+", text)
             imdb_rating = imdb_rating.group(0) if imdb_rating else text
 
-        # Rotten Tomatoes (🍅, tomatometer, rotten)
+        # Rotten Tomatoes
         elif (
             "rotten" in alt
             or "tomato" in alt
@@ -94,14 +94,17 @@ def scrape_justwatch(url: str) -> dict:
                 rt_rating = text
 
     # --- Genres ---
+    raw_genres = [
+        g.get_text(strip=True)
+        for g in soup.select(
+            ".poster-detail-infos__value span, "
+            ".poster-detail-infos__value a"
+        )
+    ]
+    # filter out counts, percentages, numeric stuff like (1k), 94%
     genres = ",".join(
-        [
-            g.get_text(strip=True)
-            for g in soup.select(
-                ".poster-detail-infos__value span, "
-                ".poster-detail-infos__value a"
-            )
-        ]
+        g for g in raw_genres
+        if not re.match(r"^\(?\d+[kK%]?\)?$", g)  # matches (1k), 94, 94%
     )
 
     # --- Runtime ---
